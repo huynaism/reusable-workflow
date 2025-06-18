@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.6
+- Use checkout v3 for gitleak
+
 ## 0.1.5
 - Add env for gitleak run
 

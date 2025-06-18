@@ -14,7 +14,7 @@ on:
       trivy_nofail:
         required: false
         type: boolean
-        default: false
+        default: true
 
 permissions:
   security-events: write
@@ -53,7 +53,7 @@ jobs:
           IMAGE=${REGISTRY}:${GITHUB_SHA}
           docker build -t ${IMAGE} .
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
-          
+
   trivy_scan:
     runs-on: self_hosted
     needs: build

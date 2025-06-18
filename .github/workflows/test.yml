@@ -2,6 +2,16 @@ name: test
 
 on:
   workflow_call:
+    inputs:
+      enable_gitleak:
+        required: false
+        type: boolean
+        default: true
+      enable_sast:
+          required: false
+          type: boolean
+          default: true
+
 
 permissions:
   contents: read
@@ -9,6 +19,7 @@ permissions:
 jobs:
   sast_testing:
     runs-on: self-hosted
+    if: inputs.enable_sast
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +37,7 @@ jobs:
   gitleak_check:
     name: gitleaks
     runs-on: self-hosted
+    if: inputs.enable_gitleak
     steps:
       - uses: actions/checkout@v4
         with:

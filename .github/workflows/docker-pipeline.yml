@@ -1,0 +1,58 @@
+name: build-scan
+
+on:
+  workflow_call:
+
+permissions:
+  security-events: write
+
+jobs:
+  hadolint_scan:
+    runs-on: self-hosted
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Dockerfile Linting
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        output-file: hadolint-result.sarif
+        format: sarif
+        no-fail: true
+
+    - name: Upload linting results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: hadolint-result.sarif
+
+  build:
+    runs-on: self-hosted
+    needs:
+      - hadolint_scan
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build image artifact
+        id: build
+        env:
+          REGISTRY: 10.89.2.2:5000/podinfo
+        run: |
+          IMAGE=${REGISTRY}:${GITHUB_SHA}
+          docker build -t ${IMAGE} .
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build.outputs.image }}
+          format: table
+          exit-code: "0"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+      - name: Push image artifact
+        id: push-artifact
+        run: |
+          docker push ${IMAGE}
+        env:
+          IMAGE: ${{ steps.build.outputs.image  }}

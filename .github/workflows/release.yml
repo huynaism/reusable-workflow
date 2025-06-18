@@ -1,0 +1,29 @@
+name: release
+
+on:
+  workflow_call:
+    inputs:
+      release:
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: push image
+        id: push
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          REGISTRY: 10.89.2.2:5000/podinfo
+        run: |
+          RELEASE_IMAGE=${REGISTRY}:${RELEASE_TAG}
+          docker tag ${REGISTRY}:${GITHUB_SHA} ${RELEASE_IMAGE}
+          docker push ${RELEASE_IMAGE}
+

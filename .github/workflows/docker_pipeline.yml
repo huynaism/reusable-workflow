@@ -41,6 +41,10 @@ jobs:
           IMAGE=${REGISTRY}:${GITHUB_SHA}
           docker build -t ${IMAGE} .
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
+  trivy_scan:
+    runs-on: self_hosted
+    needs: build
+    steps:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -50,6 +54,12 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+  push_artifact:
+    runs-on: self_hosted
+    needs: 
+      - build
+      - trivy_scan
+    steps:
       - name: Push image artifact
         id: push-artifact
         run: |
